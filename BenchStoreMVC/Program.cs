@@ -54,6 +54,8 @@ using (var scope = app.Services.CreateScope())
     resultStorage = options.Value.ResultStoragePath;
 }
 
+Directory.CreateDirectory(resultStorage);
+
 PhysicalFileProvider fileProvider = new PhysicalFileProvider(resultStorage);
 string requestPath = "/Results";
 
