@@ -1,0 +1,103 @@
+﻿@using BenchStoreBL.Services.ResultEntries;
+@model FilterResultEntriesViewModel
+@{
+    ViewData["Title"] = "Results";
+}
+
+<h1>Results</h1>
+
+<form asp-controller="ResultEntries" asp-action="@nameof(ResultEntriesController.Index)" method="get">
+    <fieldset class="border border-secondary rounded p-2 mt-4">
+        <legend class="float-none w-auto ms-2 ps-2 pe-2">Filter by</legend>
+
+        <div class="col">
+            <div class="row">
+                <div class="flex-grow me-2">
+                    <input asp-for="LabelsInput"
+                           id="labelsFlexdatalist"
+                           multiple="multiple"
+                           class="flexdatalist flexdatalist-multiple form-control w-100"
+                           data-min-length="0"
+                           list="labels">
+                    <datalist id="labels">
+                        @foreach (Label label in Model.Labels)
+                        {
+                            <option value="@label.ID">@label.Name</option>
+                        }
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="row mt-2">
+                <div class="input-group">
+                    <input type="text" asp-for="ResultEntriesFilter.BenchmarkName" class="form-control" />
+
+                    <input type="text" asp-for="ResultEntriesFilter.Name" class="form-control" />
+
+                    <input type="text" asp-for="ResultEntriesFilter.OwnerName" class="form-control" />
+
+                    <input type="text" asp-for="ResultEntriesFilter.Description" class="form-control" />
+
+                    <select asp-for="ResultEntriesFilter.Tool" asp-items="Model.Tools" class="form-select ">
+                        <option value="">All tools</option>
+                    </select>
+
+                    <button type="submit" class="btn btn-primary" id="search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </fieldset>
+
+    <fieldset class="border border-secondary rounded p-2 mt-2 mb-4">
+        <legend class="float-none w-auto ms-2 ps-2 pe-2">Sort by</legend>
+
+        <div class="row">
+            <div class="input-group">
+                <select asp-for="OrderResultEntryBy"
+                        asp-items="@Html.GetEnumSelectList<OrderResultEntryBy>()"
+                        class="form-select"
+                        id="orderBy">
+                </select>
+                <span class="input-group-text">
+                    <i class="fa-solid fa-arrow-down-short-wide"></i>
+                </span>
+            </div>
+        </div>
+    </fieldset>
+</form>
+
+@{
+    if (Model.ResultEntriesFilter != null)
+    {
+        Model.ResultEntriesFilter.LabelNames = Model.LabelsInput?.Split(",");
+    }
+    <vc:result-entries-list order-result-entry-by="@Model.OrderResultEntryBy" filter="@Model.ResultEntriesFilter"></vc:result-entries-list>
+}
+
+@section Scripts {
+    <script>
+        $('#checkAll').click(function () {
+            $('input:checkbox').not(this).prop('checked', this.checked);
+            $('#checkAllLabel').text(this.checked ? 'Deselect All' : 'Select All');
+        });
+
+        $('input:checkbox').change(function () {
+            let noneSelected = $('.result-select:checked').length === 0;
+
+            $('#generateButton').attr('disabled', noneSelected);
+
+            if (noneSelected) {
+                $('#checkAll').prop('checked', false);
+                $('#checkAllLabel').text('Select All');
+            }
+        });
+
+        $('#orderBy').change(function () {
+            $('#search').click();
+        });
+    </script>
+}
+

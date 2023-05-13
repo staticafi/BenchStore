@@ -1,0 +1,24 @@
+﻿@model BenchStoreBL.Models.ResultEntry
+
+@{
+    ViewData["Title"] = "Delete Result";
+}
+
+<h1>Confirm Delete</h1>
+
+<div class="row mt-4">
+    <div class="col-6">
+        <vc:result-entry-details id="@Model.ID"></vc:result-entry-details>
+        <div class="d-flex mt-2">
+                <form asp-action="@nameof(ResultEntriesController.Delete)" method="post" class="me-1">
+                    <input type="hidden" asp-for="ID" />
+                    <input type="submit" value="Confirm Delete" class="btn btn-danger border border-dark" />
+                </form>
+                <a asp-action="@nameof(ResultEntriesController.Details)" asp-route-id="@Model.ID" class="btn btn-secondary border border-dark me-2">Cancel</a>
+        </div>
+    </div>
+    <div class="col">
+        <vc:result-details result-entry-id="@Model.ID"></vc:result-details>
+    </div>
+</div>
+

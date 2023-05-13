@@ -1,0 +1,32 @@
+﻿@model BenchStoreBL.Models.ResultEntry
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div class="row mt-4">
+    <div class="col-6">
+        <vc:result-entry-details id="@Model.ID"></vc:result-entry-details>
+        <div class="mt-2">
+            <div>
+                <a asp-action="@nameof(ResultEntriesController.GenerateTable)" asp-route-id="@Model.ID" class="btn btn-success border border-dark" target="_blank">Generate Table</a>
+                <a asp-action="@nameof(ResultEntriesController.Edit)" asp-route-id="@Model.ID" class="btn btn-primary border border-dark">Edit</a>
+                <a asp-action="@nameof(ResultEntriesController.Delete)" asp-route-id="@Model.ID" class="btn btn-danger border border-dark">Delete</a>
+            </div>
+            <div class="mt-2">
+                <a asp-action="@nameof(ResultEntriesController.Download)" asp-route-id="@Model.ID" class="btn btn-secondary btn-sm border border-dark">Download Result (.xml.bz2)</a>
+                <a asp-action="@nameof(ResultEntriesController.Download)" asp-route-id="@Model.ID" asp-route-decompress="true" class="btn btn-secondary btn-sm border border-dark">Download Result (.xml)</a>
+                <a asp-action="@nameof(ResultEntriesController.DownloadLogFiles)"
+                   asp-route-id="@Model.ID"
+                   class="btn btn-secondary btn-sm border border-dark @(string.IsNullOrEmpty(Model.LogFilesName) ? "disabled" : "")">
+                    Download Logfiles (.zip)
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <vc:result-details result-entry-id="@Model.ID"></vc:result-details>
+    </div>
+</div>
+

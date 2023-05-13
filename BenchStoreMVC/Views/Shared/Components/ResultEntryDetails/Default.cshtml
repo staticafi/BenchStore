@@ -1,0 +1,54 @@
+﻿@model DetailsResultEntryViewModel
+<fieldset class="border border-dark rounded">
+    <legend class="float-none w-auto ms-2 mb-0 ps-2 pe-2">Result Entry</legend>
+
+    <ul class="list-group-flush rounded ps-0 mb-0 mt-0">
+        <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
+            <div class="fw-bold">
+                @Html.DisplayNameFor(model => model.ResultEntry.OwnerName)
+            </div>
+            <div>
+                @Html.DisplayFor(model => model.ResultEntry.OwnerName)
+            </div>
+        </li>
+
+        <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
+            <div class="fw-bold">
+                @Html.DisplayNameFor(model => model.ResultEntry.Description)
+            </div>
+            <div>
+                @Html.DisplayFor(model => model.ResultEntry.Description)
+            </div>
+        </li>
+
+        <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
+            <div class="fw-bold">
+                @Html.DisplayNameFor(model => model.ResultEntry.Labels)
+            </div>
+            <div>
+                @foreach (var label in Model.Labels)
+                {
+                    <span class="badge border border-dark" style="background: @label.Color">@label.Name</span>
+                }
+            </div>
+        </li>
+
+        <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
+            <div class="fw-bold">
+                @Html.DisplayNameFor(model => model.ResultEntry.ResultFileName)
+            </div>
+            <div>
+                @Html.DisplayFor(model => model.ResultEntry.ResultFileName)
+            </div>
+        </li>
+
+        <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
+            <div class="fw-bold">
+                @Html.DisplayNameFor(model => model.ResultEntry.LogFilesName)
+            </div>
+            <div>
+                @Html.DisplayFor(model => model.ResultEntry.LogFilesName)
+            </div>
+        </li>
+    </ul>
+</fieldset>

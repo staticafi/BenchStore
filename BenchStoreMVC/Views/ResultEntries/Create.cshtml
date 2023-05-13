@@ -1,0 +1,168 @@
+﻿@model CreateResultEntryViewModel
+
+@{
+    ViewData["Title"] = "Create Result Entry";
+}
+
+<h1>Create Result Entry</h1>
+
+<form asp-action="@nameof(ResultEntriesController.Create)" method="post" enctype="multipart/form-data" class="mt-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input asp-for="ResultFileTempPath" type="hidden" class="form-control" />
+    <input asp-for="ResultLogsTempPath" type="hidden" class="form-control" />
+
+    <div class="row">
+        <div class="col-6">
+            <fieldset class="border border-dark rounded p-2">
+                <legend class="float-none w-auto mb-0 ps-2 pe-2">Result Entry</legend>
+
+                <div class="form-group">
+                    <label asp-for="ResultEntry.OwnerName" class="form-label"></label>
+                    <input asp-for="ResultEntry.OwnerName" class="form-control" />
+                    <span asp-validation-for="ResultEntry.OwnerName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="ResultEntry.Description" class="form-label"></label>
+                    <span asp-description-for="ResultEntry.Description"></span>
+
+                    <input asp-for="ResultEntry.Description" class="form-control">
+                    <span asp-validation-for="ResultEntry.Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="LabelsInput" class="form-label"></label>
+                    <span asp-description-for="LabelsInput"></span>
+
+                    <input asp-for="LabelsInput"
+                           id="labelsFlexdatalist"
+                           multiple="multiple"
+                           class="flexdatalist form-control"
+                           data-min-length="0"
+                           list="labels">
+                    <datalist id="labels">
+                        @foreach (Label label in Model.Labels)
+                        {
+                            <option value="@label.Name">@label.Name</option>
+                        }
+                    </datalist>
+                    <span asp-validation-for="LabelsInput" class="text-danger"></span>
+                </div>
+
+            </fieldset>
+            <div class="form-group mt-2">
+                <input type="submit" value="Create" formmethod="post" class="btn btn-primary border border-dark" />
+                <a asp-action="@nameof(ResultEntriesController.Index)" class="btn btn-secondary me-2 border border-dark">Cancel</a>
+            </div>
+        </div>
+
+        <div class="col">
+            <fieldset class="border border-dark rounded p-2 col">
+                <legend class="float-none w-auto mb-0 ps-2 pe-2">Result</legend>
+
+                <div class="form-group">
+                    <label asp-for="Result.Name" class="form-label"></label>
+                    <input asp-for="Result.Name" class="form-control" readonly />
+                    <span asp-validation-for="Result.Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.BenchmarkName" class="form-label"></label>
+                    <input asp-for="Result.BenchmarkName" class="form-control" readonly />
+                    <span asp-validation-for="Result.BenchmarkName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.DisplayName" class="form-label"></label>
+                    <input asp-for="Result.DisplayName" class="form-control bg-light" readonly />
+                    <span asp-validation-for="Result.DisplayName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.Block" class="form-label"></label>
+                    <input asp-for="Result.Block" class="form-control" readonly />
+                    <span asp-validation-for="Result.Block" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.Tool" class="form-label"></label>
+                    <input asp-for="Result.Tool" class="form-control" readonly />
+                    <span asp-validation-for="Result.Tool" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.ToolModule" class="form-label"></label>
+                    <input asp-for="Result.ToolModule" class="form-control" readonly />
+                    <span asp-validation-for="Result.ToolModule" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.Version" class="form-label"></label>
+                    <input asp-for="Result.Version" class="form-control" readonly />
+                    <span asp-validation-for="Result.Version" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.Options" class="form-label"></label>
+                    <input asp-for="Result.Options" class="form-control" readonly />
+                    <span asp-validation-for="Result.Options" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.MemLimit" class="form-label"></label>
+                    <input asp-for="Result.MemLimit" class="form-control" readonly />
+                    <span asp-validation-for="Result.MemLimit" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.TimeLimit" class="form-label"></label>
+                    <input asp-for="Result.TimeLimit" class="form-control" readonly />
+                    <span asp-validation-for="Result.TimeLimit" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.CPUCores" class="form-label"></label>
+                    <input asp-for="Result.CPUCores" class="form-control" readonly />
+                    <span asp-validation-for="Result.CPUCores" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.Generator" class="form-label"></label>
+                    <input asp-for="Result.Generator" class="form-control" readonly />
+                    <span asp-validation-for="Result.Generator" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.Date" class="form-label"></label>
+                    <input asp-for="Result.Date" class="form-control" readonly />
+                    <span asp-validation-for="Result.Date" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.StartTime" class="form-label"></label>
+                    <input asp-for="Result.StartTime" class="form-control" readonly />
+                    <span asp-validation-for="Result.StartTime" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.EndTime" class="form-label"></label>
+                    <input asp-for="Result.EndTime" class="form-control" readonly />
+                    <span asp-validation-for="Result.EndTime" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mt-3">
+                    <label asp-for="Result.Error" class="form-label"></label>
+                    <input asp-for="Result.Error" class="form-control" readonly />
+                    <span asp-validation-for="Result.Error" class="text-danger"></span>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+

@@ -1,0 +1,42 @@
+﻿@using BenchStoreMVC.Controllers;
+@model UploadResultFileViewModel
+@{
+    ViewData["Title"] = "Upload Result";
+}
+
+<h1>Create Result Entry</h1>
+
+<form asp-action="@nameof(ResultEntriesController.Upload)" enctype="multipart/form-data" class="col-6 mt-4">
+    <fieldset class="border border-dark rounded p-2">
+        <legend class="float-none w-auto ms-2 mb-0 ps-2 pe-2">Upload Result Files</legend>
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="form-group">
+            <label asp-for="ResultFile" class="form-label"></label>
+            <span asp-description-for="ResultFile"></span>
+
+            <input asp-for="ResultFile" type="file" class="form-control" />
+            <span asp-validation-for="ResultFile" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mt-3">
+            <label asp-for="LogFiles" class="form-label"></label>
+            <span asp-description-for="LogFiles"></span>
+
+            <input asp-for="LogFiles" type="file" class="form-control" />
+            <span asp-validation-for="LogFiles" class="text-danger"></span>
+        </div>
+
+    </fieldset>
+    <div class="form-group mt-2">
+        <input type="submit" value="Next" class="btn btn-primary border border-dark" />
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
