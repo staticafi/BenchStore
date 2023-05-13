@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BenchStoreBL\BenchStoreBL.csproj" />
     <ProjectReference Include="..\BenchStoreDAL\BenchStoreDAL.csproj" />
   </ItemGroup>
 

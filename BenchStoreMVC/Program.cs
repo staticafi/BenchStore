@@ -1,9 +1,14 @@
+using BenchStoreBL;
+
 using BenchStoreDAL;
 using BenchStoreDAL.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.RegisterDALServices(builder.Configuration);
+builder.Services
+    .RegisterDALServices(builder.Configuration)
+    .RegisterBLConfig(builder.Configuration)
+    .RegisterBLServices();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
