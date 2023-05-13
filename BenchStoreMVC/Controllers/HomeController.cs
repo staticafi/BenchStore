@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-using BenchStoreMVC.Models;
+using BenchStoreMVC.ViewModels;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,19 +8,8 @@ namespace BenchStoreMVC.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
+        // GET: Home/About
+        public IActionResult About()
         {
             return View();
         }
