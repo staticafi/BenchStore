@@ -1,0 +1,57 @@
+@startuml erd
+hide circle
+
+skinparam linetype ortho
+
+entity "Result" as result {
+  *ID: int <<generated>>
+  --
+  Name: string
+  BenchmarkName: string
+  DisplayName: string
+  Block: string
+  Date: DateTime
+  StartTime: DateTime
+  EndTime: DateTime
+  Tool: string
+  ToolModule: string
+  Version: string
+  Options: string
+  MemLimit: long
+  TimeLimit: long
+  CPUCores: uint
+  Generator: string
+  Error: string
+  *ResultEntryID: int <<FK>>
+}
+
+entity "ResultEntry" as resultEntry {
+  *ID: int <<generated>>
+  --
+  *OwnerName: string
+  Description: string
+  *LastAccessTime: DateTime
+  ResultFileName: string
+  LogFilesName: string
+  ResultID: int <<FK>>
+}
+
+entity "ResultEntryLabel" as resultEntryLabel {
+  *ID: int <<generated>>
+  --
+  *ResultEntryID: int <<FK>>
+  *LabelID: int <<FK>>
+}
+
+entity "Label" as label {
+  *ID: int <<generated>>
+  --
+  *Name: string
+  Color: string
+}
+
+resultEntry ||-left-o| result
+
+resultEntryLabel }o-up-|| resultEntry
+resultEntryLabel }o-down-|| label
+@enduml
