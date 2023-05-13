@@ -10,6 +10,8 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
+
 builder.Services
     .RegisterDALServices(builder.Configuration)
     .RegisterBLConfig(builder.Configuration)
