@@ -1,6 +1,6 @@
 # BenchStore
 ## About
-BenchStore is an ASP.NET Core MVC application used for storing results from [BenchExec](https://github.com/sosy-lab/benchexec).
+BenchStore is an ASP.NET Core MVC application used for storing results from [BenchExec](https://github.com/sosy-lab/benchexec). BenchStore uses PostgreSQL as its database.
 
 ## Getting Started
 ### Requirements
@@ -48,10 +48,22 @@ CUSTOMCONNSTR_BenchStoreContext="Host=<hostname>; Database=<database-name>; User
 ```
 
 ### Quickstart
-In the `BenchStoreMVC` project, run
+From the root level of the repository run:
+```bash
+dotnet run --project ./BenchStoreMVC/
 ```
+
+Alternatively, in the `./BenchStoreMVC` directory run:
+```bash
 dotnet run
 ```
+
+### Development
+A development version of BenchStore can be started with [Visual Studio](https://visualstudio.microsoft.com/) on Windows.
+
+The Visual Studio project is started with the `BenchStore.sln` file.
+
+Set the Startup project to the `BenchStoreMVC` project and run the application.
 
 ## License
 BenchStore is licensed under the Apache 2.0 License.
