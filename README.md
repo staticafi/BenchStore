@@ -2,6 +2,10 @@
 ## About
 BenchStore is an ASP.NET Core MVC application used for storing results from [BenchExec](https://github.com/sosy-lab/benchexec). BenchStore uses PostgreSQL as its database.
 
+BenchStore is available on [GitLab](https://gitlab.fi.muni.cz/xhercko/benchstore) and [GitHub](https://github.com/staticafi/BenchStore).
+
+The GitHub repository is a mirror of the GitLab repository.
+
 ## Getting Started
 ### Requirements
 - [Python 3.7 or newer](https://www.python.org/downloads/)
