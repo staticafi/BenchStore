@@ -1,0 +1,13 @@
+image: mcr.microsoft.com/dotnet/sdk:7.0
+stages:
+  - build
+  - release
+
+build-job:
+  stage: build
+  tags:
+    - shared-fi
+  script:
+    - dotnet restore
+  artifacts:
+    untracked: true
