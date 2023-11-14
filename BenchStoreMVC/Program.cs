@@ -29,7 +29,6 @@ if (app.Environment.IsDevelopment())
         var services = scope.ServiceProvider;
 
         var context = services.GetRequiredService<BenchStoreContext>();
-        await context.Database.EnsureDeletedAsync();
         await context.Database.EnsureCreatedAsync();
     }
 
