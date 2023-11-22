@@ -13,9 +13,9 @@ services:
     container_name: rust-iteration-06-postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_USER: "user"
-      POSTGRES_DB: "benchstoredb"
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - database-persistence:/var/lib/postgresql/data
     ports:
