@@ -1,0 +1,25 @@
+services:
+  web:
+    build:
+      dockerfile: ./BenchStoreMVC/Dockerfile
+    container_name: BenchStore-web
+    ports:
+      - 15142:80
+    volumes:
+      - ./BenchStoreMVC/appsettings.Production.json:/app/appsettings.Production.json
+
+  database:
+    image: docker.io/postgres:16-alpine
+    container_name: rust-iteration-06-postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "user"
+      POSTGRES_DB: "benchstoredb"
+    volumes:
+      - database-persistence:/var/lib/postgresql/data
+    ports:
+      - 15143:5432
+
+volumes:
+  database-persistence:
