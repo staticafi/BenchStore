@@ -131,14 +131,16 @@ namespace BenchStoreMVC.Controllers
             {
                 switch (contentType)
                 {
-                    case "application/octet-stream":
+                    case "application/octet-stream" or "application/x-bzip" or "application/x-bzip2":
                         return await _resultParser
                             .ParseCompressedResult(resultFileStream);
                     case "text/xml":
                         return await _resultParser
                             .ParseResult(resultFileStream);
                     default:
-                        throw new ArgumentException($"File content type '{contentType}' not recognized. The Result File needs to be of content type text/xml (.xml) or application/octet-stream (.xml.bz2)");
+                        throw new ArgumentException($"File content type '{contentType}' not recognized. " +
+                            $"The Result File needs to be of content type 'text/xml' (.xml) or 'application/octet-stream', " +
+                            $"'application/x-bzip' or 'application/x-bzip2' (.xml.bz2)");
                 }
             }
         }
@@ -148,8 +150,7 @@ namespace BenchStoreMVC.Controllers
             string logsContentType = logFiles.ContentType;
             switch (logsContentType)
             {
-                case "application/zip":
-                case "application/x-zip-compressed":
+                case "application/zip" or "application/x-zip-compressed":
                     using (Stream resultLogsStream = logFiles.OpenReadStream())
                     {
                         return await _fileStoring
