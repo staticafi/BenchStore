@@ -1,13 +1,18 @@
 services:
   web:
     build:
-      dockerfile: ./Dockerfile
+      dockerfile: ./BenchStoreMVC/Dockerfile
     container_name: BenchStore-web
+    restart: always
+    environment:
+      ConnectionStrings__BenchStoreContext: "Host=BenchStore-db; Database=${POSTGRES_DB}; Username=${POSTGRES_USER}; Password=${POSTGRES_PASSWORD}"
+      TableGenerator__PythonPath: /usr/bin/python
+      TableGenerator__TableGeneratorPath: /usr/bin/table-generator
+      Storage__ResultStoragePath: /app/result-storage
+    volumes:
+      - result-storage:/app/result-storage
     ports:
       - 15142:80
-    volumes:
-      - ./BenchStoreMVC/appsettings.Production.json:/app/appsettings.Production.json
-      - result-storage:/app/result-storage
 
   database:
     image: docker.io/postgres:16-alpine
