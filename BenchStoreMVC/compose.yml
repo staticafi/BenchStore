@@ -1,12 +1,13 @@
 services:
   web:
     build:
-      dockerfile: ./BenchStoreMVC/Dockerfile
+      dockerfile: ./Dockerfile
     container_name: BenchStore-web
     ports:
       - 15142:80
     volumes:
       - ./BenchStoreMVC/appsettings.Production.json:/app/appsettings.Production.json
+      - result-storage:/app/result-storage
 
   database:
     image: docker.io/postgres:16-alpine
@@ -23,3 +24,4 @@ services:
 
 volumes:
   database-persistence:
+  result-storage:
