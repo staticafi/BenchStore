@@ -13,6 +13,7 @@ using ICSharpCode.SharpZipLib.BZip2;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Options;
 
 namespace BenchStoreMVC.Controllers
@@ -171,14 +172,22 @@ namespace BenchStoreMVC.Controllers
                 return View(viewModel);
             }
 
-            string resultStoragePath = _storageOptions.ResultStoragePath;
+            string resultSubdirectoryName = Guid.NewGuid().ToString();
+            string resultStoragePath = Path.Combine(_storageOptions.ResultStoragePath, resultSubdirectoryName);
+
+            Directory.CreateDirectory(resultStoragePath);
+            viewModel.ResultEntry.ResultSubdirectoryName = resultSubdirectoryName;
+
+            string resultFileName = $"{viewModel.Result.BenchmarkName}.{viewModel.Result.Date:yyyy-MM-dd_HH-mm-ss}.results.{viewModel.Result.Name}";
+            // TODO: different date!!!!
+            string logFilesName = $"{viewModel.Result.BenchmarkName}.{viewModel.Result.Date:yyyy-MM-dd_HH-mm-ss}.logfiles";
 
             List<Label> labels = await GetLabelsFromLabelsInput(viewModel.LabelsInput);
 
             using (FileStream tempFileStream = System.IO.File.OpenRead(viewModel.ResultFileTempPath))
             {
                 viewModel.ResultEntry.ResultFileName = await _fileStoring
-                    .StoreFile(tempFileStream, resultStoragePath);
+                    .StoreFile(tempFileStream, resultStoragePath, resultFileName);
             }
 
             if (viewModel.ResultLogsTempPath != null)
@@ -186,7 +195,7 @@ namespace BenchStoreMVC.Controllers
                 using (FileStream logsFileStream = System.IO.File.OpenRead(viewModel.ResultLogsTempPath))
                 {
                     viewModel.ResultEntry.LogFilesName = await _fileStoring
-                        .StoreLogFiles(logsFileStream, resultStoragePath);
+                        .StoreLogFiles(logsFileStream, resultStoragePath, logFilesName);
                 }
             }
 
@@ -347,8 +356,9 @@ namespace BenchStoreMVC.Controllers
 
             if (resultEntry != null && resultEntry.ResultFileName != null && resultEntry.LogFilesName != null)
             {
-                _fileStoring.DeleteFile(resultEntry.ResultFileName, _storageOptions.ResultStoragePath);
-                _fileStoring.DeleteFile(resultEntry.LogFilesName, _storageOptions.ResultStoragePath);
+                _fileStoring.DeleteFile(Path.Combine(resultEntry.ResultSubdirectoryName, resultEntry.ResultFileName), _storageOptions.ResultStoragePath);
+                _fileStoring.DeleteFile(Path.Combine(resultEntry.ResultSubdirectoryName, resultEntry.LogFilesName), _storageOptions.ResultStoragePath);
+                Directory.Delete(Path.Combine(_storageOptions.ResultStoragePath, resultEntry.ResultSubdirectoryName));
             }
 
             return RedirectToAction(nameof(Index));
@@ -371,13 +381,8 @@ namespace BenchStoreMVC.Controllers
             }
 
             string downloadFileName = storedResult.ResultFileName;
-            if (storedResult.Result != null)
-            {
-                downloadFileName = $"{storedResult.Result.BenchmarkName}.{storedResult.Result.Date:yyyy-MM-dd_HH-mm-ss}.{storedResult.Result.Name}.xml.bz2";
-            }
 
-
-            return DownloadFiles(storedResult.ResultFileName, decompress, downloadFileName, "application/octet-stream");
+            return DownloadFiles(storedResult.ResultSubdirectoryName, storedResult.ResultFileName, decompress, storedResult.ResultFileName, "application/octet-stream");
         }
 
         // GET: ResultEntries/Download/id
@@ -397,19 +402,15 @@ namespace BenchStoreMVC.Controllers
             }
 
             string downloadFileName = storedResult.LogFilesName;
-            if (storedResult.Result != null)
-            {
-                downloadFileName = $"{storedResult.Result.BenchmarkName}.{storedResult.Result.Date:yyyy-MM-dd_HH-mm-ss}.logfiles.zip";
-            }
 
-            return DownloadFiles(storedResult.LogFilesName, false, downloadFileName, "application/zip");
+            return DownloadFiles(storedResult.ResultSubdirectoryName, storedResult.LogFilesName, false, storedResult.LogFilesName, "application/zip");
         }
 
-        private IActionResult DownloadFiles(string fileName, bool isCompressedXML, string downloadFileName, string contentType)
+        private IActionResult DownloadFiles(string subdirectoryName, string fileName, bool isCompressedXML, string downloadFileName, string contentType)
         {
             string resultStoragePath = _storageOptions.ResultStoragePath;
 
-            string resultFilePath = Path.Combine(resultStoragePath, fileName);
+            string resultFilePath = Path.Combine(resultStoragePath, subdirectoryName, fileName);
             if (!System.IO.File.Exists(resultFilePath))
             {
                 return NotFound();
@@ -464,7 +465,9 @@ namespace BenchStoreMVC.Controllers
             List<string> resultFilePaths = new List<string>();
             List<string> logFilePaths = new List<string>();
 
-            string resultStoragePath = _storageOptions.ResultStoragePath;
+            //string resultStoragePath = _storageOptions.ResultStoragePath;
+            // TODO: try specifying with URL
+            string resultStoragePath = HttpContext.Request.Host.Value;
 
             foreach (int id in resultEntryIDs)
             {
@@ -476,30 +479,33 @@ namespace BenchStoreMVC.Controllers
                     return NotFound();
                 }
 
-                string resultFilePath = Path.Combine(resultStoragePath, storedResult.ResultFileName);
+                //string resultFilePath = Path.Combine(resultStoragePath, storedResult.ResultSubdirectoryName, storedResult.ResultFileName);
+                string resultFilePath = $"{(HttpContext.Request.IsHttps ? "https" : "http")}://{resultStoragePath}/Results/{storedResult.ResultSubdirectoryName}/{storedResult.ResultFileName}";
 
-                if (!System.IO.File.Exists(resultFilePath))
-                {
-                    return NotFound();
-                }
+                //if (!System.IO.File.Exists(resultFilePath))
+                //{
+                //    return NotFound();
+                //}
 
                 resultFilePaths.Add(resultFilePath);
 
                 if (storedResult.LogFilesName != null)
                 {
-                    string logFilePath = Path.Combine(resultStoragePath, storedResult.LogFilesName);
+                    string logFilePath = Path.Combine(resultStoragePath, storedResult.ResultSubdirectoryName, storedResult.LogFilesName);
 
-                    if (!System.IO.File.Exists(logFilePath))
-                    {
-                        return NotFound();
-                    }
+                    //if (!System.IO.File.Exists(logFilePath))
+                    //{
+                    //    return NotFound();
+                    //}
 
                     logFilePaths.Add(logFilePath);
                 }
             }
 
+            //string htmlPath = await _tableGeneratorExecutor
+            //    .ExecuteTableGenerator(resultFilePaths, logFilePaths);
             string htmlPath = await _tableGeneratorExecutor
-                .ExecuteTableGenerator(resultFilePaths, logFilePaths);
+                .ExecuteTableGenerator(resultFilePaths);
 
             FileStreamOptions fileStreamOptions = new FileStreamOptions
             {

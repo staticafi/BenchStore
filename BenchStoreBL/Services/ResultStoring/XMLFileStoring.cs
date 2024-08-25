@@ -15,10 +15,10 @@ namespace BenchStoreBL.Services.ResultStoring
             return tempFilePath;
         }
 
-        public async Task<string> StoreFile(Stream inputStream, string storagePath)
+        public async Task<string> StoreFile(Stream inputStream, string storagePath, string fileName)
         {
-            string fileName = Path.ChangeExtension(Guid.NewGuid().ToString(), ".xml.bz2");
-            string xmlFilePath = Path.Combine(storagePath, fileName);
+            string fullFileName = $"{fileName}.xml.bz2";
+            string xmlFilePath = Path.Combine(storagePath, fullFileName);
 
             using (FileStream xmlFileStream = File.OpenWrite(xmlFilePath))
             {
@@ -28,20 +28,20 @@ namespace BenchStoreBL.Services.ResultStoring
                 }
             }
 
-            return fileName;
+            return fullFileName;
         }
 
-        public async Task<string> StoreLogFiles(Stream inputStream, string storagePath)
+        public async Task<string> StoreLogFiles(Stream inputStream, string storagePath, string fileName)
         {
-            string fileName = Path.ChangeExtension(Guid.NewGuid().ToString(), "zip");
-            string logFilesPath = Path.Combine(storagePath, fileName);
+            string fullFileName = $"{fileName}.zip";
+            string logFilesPath = Path.Combine(storagePath, fullFileName);
 
             using (FileStream logFilesStream = File.OpenWrite(logFilesPath))
             {
                 await inputStream.CopyToAsync(logFilesStream);
             }
 
-            return fileName;
+            return fullFileName;
         }
 
         public void DeleteFile(string fileName, string storagePath)

@@ -13,6 +13,7 @@ namespace BenchStoreBL.Models.Mappers
                     OwnerName = storedResultEntity.OwnerName,
                     Description = storedResultEntity.Description,
                     LastAccessTime = storedResultEntity.LastAccessTime,
+                    ResultSubdirectoryName = storedResultEntity.ResultSubdirectoryName,
                     ResultFileName = storedResultEntity.ResultFileName,
                     LogFilesName = storedResultEntity.LogFilesName,
                     Result = storedResultEntity.Result?.MapToModel(mapId),
@@ -23,6 +24,7 @@ namespace BenchStoreBL.Models.Mappers
                     OwnerName = storedResultEntity.OwnerName,
                     Description = storedResultEntity.Description,
                     LastAccessTime = storedResultEntity.LastAccessTime,
+                    ResultSubdirectoryName = storedResultEntity.ResultSubdirectoryName,
                     ResultFileName = storedResultEntity.ResultFileName,
                     LogFilesName = storedResultEntity.LogFilesName,
                     Result = storedResultEntity.Result?.MapToModel(mapId),
@@ -39,6 +41,7 @@ namespace BenchStoreBL.Models.Mappers
                     OwnerName = storedResult.OwnerName,
                     Description = storedResult.Description,
                     LastAccessTime = storedResult.LastAccessTime,
+                    ResultSubdirectoryName = storedResult.ResultSubdirectoryName,
                     ResultFileName = storedResult.ResultFileName,
                     LogFilesName = storedResult.LogFilesName,
                 }
@@ -47,6 +50,7 @@ namespace BenchStoreBL.Models.Mappers
                     OwnerName = storedResult.OwnerName,
                     Description = storedResult.Description,
                     LastAccessTime = storedResult.LastAccessTime,
+                    ResultSubdirectoryName = storedResult.ResultSubdirectoryName,
                     ResultFileName = storedResult.ResultFileName,
                     LogFilesName = storedResult.LogFilesName,
                 };

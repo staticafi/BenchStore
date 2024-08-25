@@ -64,6 +64,7 @@ string requestPath = "/Results";
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fileProvider,
+    ServeUnknownFileTypes = true,
     RequestPath = requestPath
 });
 

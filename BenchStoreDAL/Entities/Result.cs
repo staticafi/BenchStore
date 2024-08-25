@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BenchStoreDAL.Entities
 {
@@ -88,8 +87,6 @@ namespace BenchStoreDAL.Entities
         /// </summary>
         public string? Error { get; set; }
 
-        [ForeignKey(nameof(ResultEntry))]
-        public int ResultEntryID { get; set; }
         public ResultEntry ResultEntry { get; set; } = null!;
     }
 }

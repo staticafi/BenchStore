@@ -16,9 +16,9 @@ namespace BenchStoreBL.Services.ResultEntries
         [Display(Name = "Owner Name", Prompt = "Owner Name")]
         public string? OwnerName { get; set; }
 
-
         [Display(Name = "Description", Prompt = "Description")]
         public string? Description { get; set; }
+
         public IEnumerable<string>? LabelNames { get; set; }
     }
 }
