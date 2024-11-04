@@ -6,8 +6,11 @@ namespace BenchStoreDAL.Entities
     {
         [Key]
         public int ID { get; set; }
+
         public string? Name { get; set; }
+
         public string? Color { get; set; }
+
         public ICollection<ResultEntry> ResultEntries { get; set; } = new List<ResultEntry>();
     }
 }

@@ -11,7 +11,7 @@ namespace BenchStoreBL.Services.XMLElementParsing
             where TElement : IXMLElement
         {
             XmlReaderSettings settings = new XmlReaderSettings();
-            //settings.Async = true;
+
             settings.ValidationType = ValidationType.DTD;
             settings.ValidationFlags = System.Xml.Schema.XmlSchemaValidationFlags.ReportValidationWarnings;
             settings.DtdProcessing = DtdProcessing.Parse;

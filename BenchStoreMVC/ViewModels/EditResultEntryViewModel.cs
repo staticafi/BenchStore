@@ -7,8 +7,10 @@ namespace BenchStoreMVC.ViewModels
     public class EditResultEntryViewModel
     {
         public required ResultEntry ResultEntry { get; set; }
+
         public required Result Result { get; set; }
-        public IEnumerable<Label>? Labels { get; set; }
+
+        public IEnumerable<Label> Labels { get; set; } = new List<Label>();
 
         [Display(Name = "Labels", Description = "(Optional, separated by \",\")")]
         public string? LabelsInput { get; set; }

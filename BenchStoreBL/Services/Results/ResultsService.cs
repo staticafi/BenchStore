@@ -10,11 +10,11 @@ using Entities = BenchStoreDAL.Entities;
 
 namespace BenchStoreBL.Services.Results
 {
-    internal class ResultService : IResultsService
+    internal class ResultsService : IResultsService
     {
         private readonly BenchStoreContext _context;
 
-        public ResultService(BenchStoreContext context)
+        public ResultsService(BenchStoreContext context)
         {
             _context = context;
         }
@@ -44,6 +44,17 @@ namespace BenchStoreBL.Services.Results
 
             return resultEntryEntity?.Result.MapToModel(true);
         }
+
+        public string GetResultName(Result result)
+        {
+            return $"{result.BenchmarkName}.{result.Date:yyyy-MM-dd_HH-mm-ss}.results.{result.Name}";
+        }
+
+        public string GetLogFilesName(Result result)
+        {
+            return $"{result.BenchmarkName}.{result.Date:yyyy-MM-dd_HH-mm-ss}.logfiles";
+        }
+
     }
 }
 

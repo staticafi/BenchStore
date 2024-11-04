@@ -35,6 +35,15 @@
 
         <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
             <div class="fw-bold">
+                @Html.DisplayNameFor(model => model.ResultEntry.ResultSubdirectoryName)
+            </div>
+            <div>
+                @Html.DisplayFor(model => model.ResultEntry.ResultSubdirectoryName)/
+            </div>
+        </li>
+
+        <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
+            <div class="fw-bold">
                 @Html.DisplayNameFor(model => model.ResultEntry.ResultFileName)
             </div>
             <div>
@@ -42,13 +51,18 @@
             </div>
         </li>
 
-        <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
-            <div class="fw-bold">
-                @Html.DisplayNameFor(model => model.ResultEntry.LogFilesName)
-            </div>
-            <div>
-                @Html.DisplayFor(model => model.ResultEntry.LogFilesName)
-            </div>
-        </li>
+        @{
+            if (!string.IsNullOrEmpty(Model.ResultEntry.LogFilesName))
+            {
+                <li class="list-group-item d-flex flex-column justify-content-between align-items-start">
+                    <div class="fw-bold">
+                        @Html.DisplayNameFor(model => model.ResultEntry.LogFilesName)
+                    </div>
+                    <div>
+                        @Html.DisplayFor(model => model.ResultEntry.LogFilesName)
+                    </div>
+                </li>
+            }
+        }
     </ul>
 </fieldset>

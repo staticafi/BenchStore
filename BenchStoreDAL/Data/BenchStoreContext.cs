@@ -10,7 +10,9 @@ namespace BenchStoreDAL.Data
             : base(options) { }
 
         public DbSet<ResultEntry> ResultEntry { get; set; }
+
         public DbSet<Result> Result { get; set; }
+
         public DbSet<Label> Label { get; set; }
     }
 }

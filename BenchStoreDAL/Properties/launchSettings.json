@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "BenchStoreDAL": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "Host:Environment": "Development"
+      }
+    }
+  }
+}

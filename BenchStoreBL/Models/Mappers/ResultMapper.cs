@@ -52,7 +52,7 @@ namespace BenchStoreBL.Models.Mappers
         {
             DateTime startTime = DateTime.SpecifyKind(result.StartTime, DateTimeKind.Utc);
             DateTime endTime = DateTime.SpecifyKind(result.EndTime, DateTimeKind.Utc);
-            DateTime date = DateTime.SpecifyKind(result.Date, DateTimeKind.Utc);
+            DateTime date = DateTime.SpecifyKind(result.Date.UtcDateTime, DateTimeKind.Utc);
 
             return mapId
                 ? new Entities.Result

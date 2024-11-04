@@ -1,10 +1,11 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Globalization;
+using System.Text.RegularExpressions;
 
 using BenchStoreBL.XMLData;
 
 namespace BenchStoreBL.Models.Mappers
 {
-    public static class XMLElementMapper
+    public static class XMLResultMapper
     {
         private static Dictionary<string, string> timeZoneOffsets =
             new Dictionary<string, string>() {
@@ -110,7 +111,8 @@ namespace BenchStoreBL.Models.Mappers
 
             DateTime startTime = xmlResultElement.StartTime.ToUniversalTime();
             DateTime endTime = xmlResultElement.EndTime.ToUniversalTime();
-            DateTime date = GetDate(xmlResultElement.Date).ToUniversalTime();
+            DateTimeOffset date = GetDate(xmlResultElement.Date);
+
             return new Result
             {
                 Name = xmlResultElement.Name,
@@ -172,14 +174,15 @@ namespace BenchStoreBL.Models.Mappers
             return timeLimit;
         }
 
-        private static DateTime GetDate(string date)
+        private static DateTimeOffset GetDate(string date)
         {
             int timezonePosition = date.LastIndexOf(' ') + 1;
             string timezone = date.Substring(timezonePosition);
 
-            string parsedDate = date.Replace(timezone, timeZoneOffsets[timezone]);
+            string dateString = date.Replace(timezone, timeZoneOffsets[timezone]);
+            DateTimeOffset parsedDate = DateTimeOffset.ParseExact(dateString, "yyyy-MM-dd HH:mm:ss zzz", CultureInfo.InvariantCulture);
 
-            return DateTime.ParseExact(parsedDate, "yyyy-MM-dd HH:mm:ss zzz", System.Globalization.CultureInfo.InvariantCulture);
+            return parsedDate;
         }
     }
 }

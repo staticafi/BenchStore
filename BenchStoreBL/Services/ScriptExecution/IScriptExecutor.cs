@@ -2,7 +2,7 @@
 {
     public interface IScriptExecutor
     {
-        public Task<string> RunScript(string command, IEnumerable<OptionArgument> arguments);
+        public Task<(string, string)> RunScript(string command, IEnumerable<OptionArgument> arguments);
     }
 }
 

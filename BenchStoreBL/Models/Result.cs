@@ -33,7 +33,7 @@ namespace BenchStoreBL.Models
         /// <summary>
         /// Required
         /// </summary> 
-        public DateTime Date { get; set; }
+        public DateTimeOffset Date { get; set; }
 
         /// <summary>
         /// Required

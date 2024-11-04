@@ -4,51 +4,55 @@ namespace BenchStoreBL.Models.Mappers
 {
     public static class ResultEntryMapper
     {
-        public static ResultEntry MapToModel(this Entities.ResultEntry storedResultEntity, bool mapId)
+        public static ResultEntry MapToModel(this Entities.ResultEntry resultEntryEntity, bool mapId)
         {
             return mapId
                 ? new ResultEntry
                 {
-                    ID = storedResultEntity.ID,
-                    OwnerName = storedResultEntity.OwnerName,
-                    Description = storedResultEntity.Description,
-                    LastAccessTime = storedResultEntity.LastAccessTime,
-                    ResultFileName = storedResultEntity.ResultFileName,
-                    LogFilesName = storedResultEntity.LogFilesName,
-                    Result = storedResultEntity.Result?.MapToModel(mapId),
-                    Labels = storedResultEntity.Labels?.Select(l => l.MapToModel(mapId)),
+                    ID = resultEntryEntity.ID,
+                    OwnerName = resultEntryEntity.OwnerName,
+                    Description = resultEntryEntity.Description,
+                    LastAccessTime = resultEntryEntity.LastAccessTime,
+                    ResultSubdirectoryName = resultEntryEntity.ResultSubdirectoryName,
+                    ResultFileName = resultEntryEntity.ResultFileName,
+                    LogFilesName = resultEntryEntity.LogFilesName,
+                    Result = resultEntryEntity.Result?.MapToModel(mapId),
+                    Labels = resultEntryEntity.Labels?.Select(l => l.MapToModel(mapId)),
                 }
                 : new ResultEntry
                 {
-                    OwnerName = storedResultEntity.OwnerName,
-                    Description = storedResultEntity.Description,
-                    LastAccessTime = storedResultEntity.LastAccessTime,
-                    ResultFileName = storedResultEntity.ResultFileName,
-                    LogFilesName = storedResultEntity.LogFilesName,
-                    Result = storedResultEntity.Result?.MapToModel(mapId),
-                    Labels = storedResultEntity.Labels?.Select(l => l.MapToModel(mapId)),
+                    OwnerName = resultEntryEntity.OwnerName,
+                    Description = resultEntryEntity.Description,
+                    LastAccessTime = resultEntryEntity.LastAccessTime,
+                    ResultSubdirectoryName = resultEntryEntity.ResultSubdirectoryName,
+                    ResultFileName = resultEntryEntity.ResultFileName,
+                    LogFilesName = resultEntryEntity.LogFilesName,
+                    Result = resultEntryEntity.Result?.MapToModel(mapId),
+                    Labels = resultEntryEntity.Labels?.Select(l => l.MapToModel(mapId)),
                 };
         }
 
-        public static Entities.ResultEntry MapToEntity(this ResultEntry storedResult, bool mapId)
+        public static Entities.ResultEntry MapToEntity(this ResultEntry resultEntry, bool mapId)
         {
             return mapId
                 ? new Entities.ResultEntry
                 {
-                    ID = storedResult.ID,
-                    OwnerName = storedResult.OwnerName,
-                    Description = storedResult.Description,
-                    LastAccessTime = storedResult.LastAccessTime,
-                    ResultFileName = storedResult.ResultFileName,
-                    LogFilesName = storedResult.LogFilesName,
+                    ID = resultEntry.ID,
+                    OwnerName = resultEntry.OwnerName,
+                    Description = resultEntry.Description,
+                    LastAccessTime = resultEntry.LastAccessTime,
+                    ResultSubdirectoryName = resultEntry.ResultSubdirectoryName,
+                    ResultFileName = resultEntry.ResultFileName,
+                    LogFilesName = resultEntry.LogFilesName,
                 }
                 : new Entities.ResultEntry
                 {
-                    OwnerName = storedResult.OwnerName,
-                    Description = storedResult.Description,
-                    LastAccessTime = storedResult.LastAccessTime,
-                    ResultFileName = storedResult.ResultFileName,
-                    LogFilesName = storedResult.LogFilesName,
+                    OwnerName = resultEntry.OwnerName,
+                    Description = resultEntry.Description,
+                    LastAccessTime = resultEntry.LastAccessTime,
+                    ResultSubdirectoryName = resultEntry.ResultSubdirectoryName,
+                    ResultFileName = resultEntry.ResultFileName,
+                    LogFilesName = resultEntry.LogFilesName,
                 };
         }
     }

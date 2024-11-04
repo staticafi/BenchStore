@@ -2,7 +2,7 @@
 {
     public interface ITableGeneratorExecutor
     {
-        Task<string> ExecuteTableGenerator(IEnumerable<string> resultFilePaths, IEnumerable<string>? logFilesPaths = null);
+        Task<string> ExecuteTableGenerator(string hostUrl, IEnumerable<string> resultFilePaths, IEnumerable<string>? logFilesPaths = null);
     }
 }
 

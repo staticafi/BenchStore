@@ -12,9 +12,12 @@ namespace BenchStoreMVC.ViewModels
         public SelectList? Tools { get; set; }
 
         [Display(Name = "Labels", Prompt = "Labels")]
-        public string? LabelsInput { get; set; }
-        public IEnumerable<Label>? Labels { get; set; }
+        public string LabelsInput { get; set; } = string.Empty;
+
+        public required IEnumerable<Label> Labels { get; set; }
+
         public OrderResultEntryBy OrderResultEntryBy { get; set; } = OrderResultEntryBy.Date;
+
         public ResultEntriesFilter? ResultEntriesFilter { get; set; }
     }
 }

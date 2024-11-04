@@ -1,7 +1,6 @@
 ﻿using BenchStoreBL.Options;
 using BenchStoreBL.Services.Labels;
 using BenchStoreBL.Services.ResultEntries;
-using BenchStoreBL.Services.ResultParsing;
 using BenchStoreBL.Services.Results;
 using BenchStoreBL.Services.ResultStoring;
 using BenchStoreBL.Services.ScriptExecution;
@@ -28,11 +27,10 @@ namespace BenchStoreBL
         public static IServiceCollection RegisterBLServices(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddScoped<IResultEntriesService, ResultEntriesService>();
-            serviceCollection.AddScoped<IResultsService, ResultService>();
+            serviceCollection.AddScoped<IResultsService, ResultsService>();
             serviceCollection.AddScoped<ILabelsService, LabelsService>();
             serviceCollection.AddScoped<IXMLElementParser, XMLElementParser>();
-            serviceCollection.AddScoped<IResultParser, XMLResultParser>();
-            serviceCollection.AddScoped<IFileStoring, XMLFileStoring>();
+            serviceCollection.AddScoped<IFileStorage, ResultFileStorage>();
             serviceCollection.AddScoped<IScriptExecutor, PythonExecutor>();
             serviceCollection.AddScoped<ITableGeneratorExecutor, TableGeneratorExecutor>();
 

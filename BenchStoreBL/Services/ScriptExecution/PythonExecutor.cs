@@ -16,45 +16,42 @@ namespace BenchStoreBL.Services.ScriptExecution
             _tableGeneratorOptions = options.Value;
         }
 
-        public async Task<string> RunScript(string command, IEnumerable<OptionArgument> optionArguments)
+        public async Task<(string, string)> RunScript(string command, IEnumerable<OptionArgument> arguments)
         {
             string pythonPath = _tableGeneratorOptions.PythonPath;
 
-            string combinedOptionArguments = CombineOptionArguments(optionArguments);
+            string combinedOptionArguments = CombineOptionArguments(arguments);
 
-            ProcessStartInfo startProcess = new ProcessStartInfo();
-            startProcess.FileName = pythonPath;
-            startProcess.Arguments = $"\"{command}\" {combinedOptionArguments}";
-            startProcess.UseShellExecute = false;
-            startProcess.CreateNoWindow = true;
-            startProcess.RedirectStandardOutput = true;
-            startProcess.RedirectStandardError = true;
-
-            using (Process? process = Process.Start(startProcess))
+            using (Process process = new Process())
             {
-                if (process == null)
-                {
-                    throw new InvalidOperationException($"Could not start process: '{pythonPath}' with command: '{command}' and args: '{combinedOptionArguments}'");
-                }
+                process.StartInfo.FileName = pythonPath;
+                process.StartInfo.Arguments = $"\"{command}\" {combinedOptionArguments}";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
 
-                using (StreamReader stdoutReader = process.StandardOutput)
-                {
-                    string stderr = await process.StandardError.ReadToEndAsync();
-                    string result = await stdoutReader.ReadToEndAsync();
-                    return result;
-                }
+                process.Start();
+
+                string stdout = await process.StandardOutput.ReadToEndAsync();
+                string stderr = await process.StandardError.ReadToEndAsync();
+
+                process.WaitForExit();
+                return (stdout, stderr);
             }
         }
 
         private string CombineOptionArguments(IEnumerable<OptionArgument> optionArguments)
         {
             var stringBuilder = new StringBuilder();
+
             foreach (var optionArgument in optionArguments)
             {
                 if (optionArgument.Option != null)
                 {
                     stringBuilder.Append($"{optionArgument.Option} ");
                 }
+
                 stringBuilder.Append($"\"{optionArgument.Argument}\" ");
             }
 

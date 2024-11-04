@@ -90,6 +90,7 @@ namespace BenchStoreDAL.Entities
 
         [ForeignKey(nameof(ResultEntry))]
         public int ResultEntryID { get; set; }
+
         public ResultEntry ResultEntry { get; set; } = null!;
     }
 }

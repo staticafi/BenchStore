@@ -1,15 +1,15 @@
 ﻿using BenchStoreBL.Models;
+using BenchStoreBL.Models.Mappers;
 using BenchStoreBL.Options;
 using BenchStoreBL.Services.Labels;
 using BenchStoreBL.Services.ResultEntries;
-using BenchStoreBL.Services.ResultParsing;
+using BenchStoreBL.Services.Results;
 using BenchStoreBL.Services.ResultStoring;
 using BenchStoreBL.Services.ScriptExecution;
-
+using BenchStoreBL.Services.XMLElementParsing;
+using BenchStoreBL.XMLData;
 using BenchStoreMVC.ViewModels;
-
 using ICSharpCode.SharpZipLib.BZip2;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -20,25 +20,28 @@ namespace BenchStoreMVC.Controllers
     public class ResultEntriesController : Controller
     {
         private readonly IResultEntriesService _resultEntriesService;
+        private readonly IResultsService _resultsService;
         private readonly ILabelsService _labelsService;
-        private readonly IResultParser _resultParser;
-        private readonly IFileStoring _fileStoring;
+        private readonly IFileStorage _fileStorage;
         private readonly ITableGeneratorExecutor _tableGeneratorExecutor;
+        private readonly IXMLElementParser _xmlElementParser;
         private readonly StorageOptions _storageOptions;
 
         public ResultEntriesController(
             IResultEntriesService resultEntriesService,
+            IResultsService resultsService,
             ILabelsService labelsService,
-            IResultParser resultParser,
-            IFileStoring fileStoreService,
+            IFileStorage fileStorage,
             ITableGeneratorExecutor tableGeneratorExecutor,
+            IXMLElementParser xmlElementParser,
             IOptions<StorageOptions> options)
         {
             _resultEntriesService = resultEntriesService;
+            _resultsService = resultsService;
             _labelsService = labelsService;
-            _resultParser = resultParser;
-            _fileStoring = fileStoreService;
+            _fileStorage = fileStorage;
             _tableGeneratorExecutor = tableGeneratorExecutor;
+            _xmlElementParser = xmlElementParser;
             _storageOptions = options.Value;
         }
 
@@ -78,10 +81,41 @@ namespace BenchStoreMVC.Controllers
                 return View(viewModel);
             }
 
-            ParsedResult parsedResult;
+            Result result;
+            string tempFilePath;
+
             try
             {
-                parsedResult = await ParseResultFile(viewModel.ResultFile);
+                using (Stream resultFileStream = viewModel.ResultFile.OpenReadStream())
+                {
+                    switch (viewModel.ResultFile.ContentType)
+                    {
+                        case "application/octet-stream" or "application/x-bzip" or "application/x-bzip2" or "application/x-compressed":
+                            using (MemoryStream decompressedStream = new MemoryStream())
+                            {
+                                using (BZip2InputStream bzipInputStream = new BZip2InputStream(resultFileStream))
+                                {
+                                    bzipInputStream.IsStreamOwner = false;
+                                    await bzipInputStream.CopyToAsync(decompressedStream);
+
+                                }
+                                decompressedStream.Position = 0;
+                                result = ParseResult(decompressedStream);
+
+                                decompressedStream.Position = 0;
+                                tempFilePath = await _fileStorage.StoreTemporaryFile(decompressedStream);
+                            }
+                            break;
+                        case "text/xml":
+                            result = ParseResult(resultFileStream);
+
+                            resultFileStream.Position = 0;
+                            tempFilePath = await _fileStorage.StoreTemporaryFile(resultFileStream);
+                            break;
+                        default:
+                            throw new ArgumentException($"File content type '{viewModel.ResultFile.ContentType}' not recognized. The Result File needs to be of content type 'text/xml' (.xml) or 'application/octet-stream', 'application/x-bzip' or 'application/x-bzip2' (.xml.bz2)");
+                    }
+                }
             }
             catch (ArgumentException ex)
             {
@@ -89,23 +123,62 @@ namespace BenchStoreMVC.Controllers
                     m => m.ResultFile,
                     ex.Message
                 );
+
                 return View(viewModel);
             }
+            catch (FormatException ex)
+            {
+                ModelState.AddModelError<UploadResultFileViewModel>(
+                    m => m.ResultFile,
+                    ex.Message
+                );
+
+                return View(viewModel);
+            }
+
+            string resultName = _resultsService.GetResultName(result);
+            if (!viewModel.ResultFile.FileName.Contains(resultName))
+            {
+                ModelState.AddModelError<UploadResultFileViewModel>(
+                    m => m.ResultFile,
+                    "The file name does not match the result metadata."
+                );
+
+                return View(viewModel);
+            }
+
+            int namePosition = viewModel.ResultFile.FileName.IndexOf(resultName);
+            string filePrefix = viewModel.ResultFile.FileName.Substring(0, namePosition);
 
             string? resultLogsPath = null;
             if (viewModel.LogFiles != null)
             {
-                try
-                {
-                    resultLogsPath = await StoreLogFiles(viewModel.LogFiles);
-                }
-                catch (ArgumentException ex)
+                string logFilesName = _resultsService.GetLogFilesName(result);
+                if (!viewModel.LogFiles.FileName.Contains(logFilesName))
                 {
                     ModelState.AddModelError<UploadResultFileViewModel>(
                         m => m.LogFiles,
-                        ex.Message
+                        "The file name does not match the result metadata."
                     );
+
                     return View(viewModel);
+                }
+
+                using (Stream resultLogsStream = viewModel.LogFiles.OpenReadStream())
+                {
+                    switch (viewModel.LogFiles.ContentType)
+                    {
+                        case "application/zip" or "application/x-zip-compressed":
+                            resultLogsPath = await _fileStorage.StoreTemporaryFile(resultLogsStream);
+                            break;
+                        default:
+                            ModelState.AddModelError<UploadResultFileViewModel>(
+                                m => m.LogFiles,
+                                $"File content type '{viewModel.LogFiles.ContentType}' not recognized. The Log Files need to be of content type 'application/zip' or 'application/x-zip-compressed' (.zip)"
+                            );
+
+                            return View(viewModel);
+                    }
                 }
             }
 
@@ -115,50 +188,20 @@ namespace BenchStoreMVC.Controllers
             CreateResultEntryViewModel createResultEntryViewModel = new CreateResultEntryViewModel
             {
                 ResultEntry = new ResultEntry(),
-                Result = parsedResult.Result,
-                ResultFileTempPath = parsedResult.ResultFilePath,
+                Result = result,
+                ResultFileTempPath = tempFilePath,
                 ResultLogsTempPath = resultLogsPath,
                 Labels = labels,
+                FileNamePrefix = filePrefix,
             };
 
             return View(nameof(Create), createResultEntryViewModel);
         }
 
-        private async Task<ParsedResult> ParseResultFile(IFormFile resultFile)
+        private Result ParseResult(Stream resultStream)
         {
-            string contentType = resultFile.ContentType;
-            using (Stream resultFileStream = resultFile.OpenReadStream())
-            {
-                switch (contentType)
-                {
-                    case "application/octet-stream" or "application/x-bzip" or "application/x-bzip2":
-                        return await _resultParser
-                            .ParseCompressedResult(resultFileStream);
-                    case "text/xml":
-                        return await _resultParser
-                            .ParseResult(resultFileStream);
-                    default:
-                        throw new ArgumentException($"File content type '{contentType}' not recognized. " +
-                            $"The Result File needs to be of content type 'text/xml' (.xml) or 'application/octet-stream', " +
-                            $"'application/x-bzip' or 'application/x-bzip2' (.xml.bz2)");
-                }
-            }
-        }
-
-        private async Task<string> StoreLogFiles(IFormFile logFiles)
-        {
-            string logsContentType = logFiles.ContentType;
-            switch (logsContentType)
-            {
-                case "application/zip" or "application/x-zip-compressed":
-                    using (Stream resultLogsStream = logFiles.OpenReadStream())
-                    {
-                        return await _fileStoring
-                            .StoreTemporaryFile(resultLogsStream);
-                    }
-                default:
-                    throw new ArgumentException($"File content type '{logsContentType}' not recognized. The Log Files need to be of content type application/zip or application/x-zip-compressed (.zip)");
-            }
+            XMLResultElement xmlResultElement = _xmlElementParser.ParseXMLElement<XMLResultElement>(resultStream);
+            return xmlResultElement.MapToModel();
         }
 
         // POST: ResultEntries/Create
@@ -168,35 +211,36 @@ namespace BenchStoreMVC.Controllers
         {
             if (!ModelState.IsValid)
             {
+                viewModel.Labels = await _labelsService.GetLabels();
                 return View(viewModel);
             }
 
-            string resultStoragePath = _storageOptions.ResultStoragePath;
+            viewModel.ResultEntry.ResultSubdirectoryName = _fileStorage.CreateNewRandomStorageDirectory(_storageOptions.ResultStoragePath);
 
-            List<Label> labels = await GetLabelsFromLabelsInput(viewModel.LabelsInput);
-
-            using (FileStream tempFileStream = System.IO.File.OpenRead(viewModel.ResultFileTempPath))
-            {
-                viewModel.ResultEntry.ResultFileName = await _fileStoring
-                    .StoreFile(tempFileStream, resultStoragePath);
-            }
+            string resultName = _resultsService.GetResultName(viewModel.Result);
+            viewModel.ResultEntry.ResultFileName = await _fileStorage.MoveTemporaryFileToStore(
+                viewModel.ResultFileTempPath,
+                viewModel.ResultEntry.ResultSubdirectoryName,
+                $"{viewModel.FileNamePrefix}{resultName}"
+            );
 
             if (viewModel.ResultLogsTempPath != null)
             {
-                using (FileStream logsFileStream = System.IO.File.OpenRead(viewModel.ResultLogsTempPath))
-                {
-                    viewModel.ResultEntry.LogFilesName = await _fileStoring
-                        .StoreLogFiles(logsFileStream, resultStoragePath);
-                }
+                string logFilesName = _resultsService.GetLogFilesName(viewModel.Result);
+                viewModel.ResultEntry.LogFilesName = await _fileStorage.MoveTemporaryLogFilesToStore(
+                    viewModel.ResultLogsTempPath,
+                    viewModel.ResultEntry.ResultSubdirectoryName,
+                    $"{viewModel.FileNamePrefix}{logFilesName}"
+                );
             }
 
-            int storedResultId = await _resultEntriesService
-                .CreateResultEntry(viewModel.ResultEntry, viewModel.Result);
+            int storedResultId = await _resultEntriesService.CreateResultEntry(viewModel.ResultEntry, viewModel.Result);
+
+            List<Label> labels = await GetLabelsFromLabelsInput(viewModel.LabelsInput);
 
             try
             {
-                await _resultEntriesService
-                    .EditResultEntryLabels(storedResultId, labels);
+                await _resultEntriesService.EditResultEntryLabels(storedResultId, labels);
             }
             catch (ArgumentException e)
             {
@@ -204,38 +248,6 @@ namespace BenchStoreMVC.Controllers
             }
 
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task<List<Label>> GetLabelsFromLabelsInput(string? labelsInput)
-        {
-            List<Label> labels = new List<Label>();
-
-            if (labelsInput == null)
-            {
-                return labels;
-            }
-
-            string[] stringLabels = labelsInput.Split(",");
-
-            foreach (string stringLabel in stringLabels)
-            {
-                Label? label = await _labelsService
-                    .GetLabelByName(stringLabel);
-
-                if (label == null)
-                {
-                    label = new Label
-                    {
-                        Name = stringLabel,
-                    };
-                    label.ID = await _labelsService
-                        .CreateLabel(label);
-                }
-
-                labels.Add(label);
-            }
-
-            return labels;
         }
 
         // GET: ResultEntries/Details/id
@@ -264,26 +276,23 @@ namespace BenchStoreMVC.Controllers
                 return NotFound();
             }
 
-            ResultEntry? resultEntry = await _resultEntriesService
-                .GetResultEntryByID(id.Value);
+            ResultEntry? resultEntry = await _resultEntriesService.GetResultEntryByID(id.Value);
 
             if (resultEntry == null)
             {
                 return NotFound();
             }
 
-            IEnumerable<Label> resultEntryLabels = await _labelsService
-                .GetResultEntryLabels(resultEntry.ID);
+            IEnumerable<Label> resultEntryLabels = await _labelsService.GetResultEntryLabels(resultEntry.ID);
 
-            IEnumerable<Label> labels = await _labelsService
-                .GetLabels();
+            IEnumerable<Label> labels = await _labelsService.GetLabels();
 
             EditResultEntryViewModel viewModel = new EditResultEntryViewModel
             {
                 ResultEntry = resultEntry,
                 Result = resultEntry.Result,
-                LabelsInput = string.Join(",", resultEntryLabels
-                    .Select(l => l.Name)
+                LabelsInput = string.Join(",",
+                    resultEntryLabels.Select(l => l.Name)
                 ),
                 Labels = labels,
             };
@@ -301,26 +310,24 @@ namespace BenchStoreMVC.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                List<Label> labels = await GetLabelsFromLabelsInput(viewModel.LabelsInput);
-
-                try
-                {
-                    await _resultEntriesService
-                        .EditResultEntry(viewModel.ResultEntry);
-                    await _resultEntriesService
-                        .EditResultEntryLabels(viewModel.ResultEntry.ID, labels);
-                }
-                catch (ArgumentException e)
-                {
-                    return NotFound(e.Message);
-                }
-
-                return RedirectToAction(nameof(Index));
+                return View(viewModel);
             }
 
-            return View(viewModel);
+            List<Label> labels = await GetLabelsFromLabelsInput(viewModel.LabelsInput);
+
+            try
+            {
+                await _resultEntriesService.EditResultEntry(viewModel.ResultEntry);
+                await _resultEntriesService.EditResultEntryLabels(viewModel.ResultEntry.ID, labels);
+            }
+            catch (ArgumentException e)
+            {
+                return NotFound(e.Message);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
 
@@ -342,14 +349,14 @@ namespace BenchStoreMVC.Controllers
         {
             ResultEntry? resultEntry = await _resultEntriesService.GetResultEntryByID(id);
 
-            await _resultEntriesService
-                .DeleteResultEntry(id);
-
-            if (resultEntry != null && resultEntry.ResultFileName != null && resultEntry.LogFilesName != null)
+            if (resultEntry == null)
             {
-                _fileStoring.DeleteFile(resultEntry.ResultFileName, _storageOptions.ResultStoragePath);
-                _fileStoring.DeleteFile(resultEntry.LogFilesName, _storageOptions.ResultStoragePath);
+                return NotFound();
             }
+
+            await _resultEntriesService.DeleteResultEntry(id);
+
+            _fileStorage.DeleteStore(resultEntry.ResultSubdirectoryName);
 
             return RedirectToAction(nameof(Index));
         }
@@ -362,25 +369,17 @@ namespace BenchStoreMVC.Controllers
                 return NotFound();
             }
 
-            ResultEntry? storedResult = await _resultEntriesService
-                .GetResultEntryByID(id.Value);
+            ResultEntry? storedResult = await _resultEntriesService.GetResultEntryByID(id.Value);
 
-            if (storedResult == null || storedResult.ResultFileName == null)
+            if (storedResult == null)
             {
                 return NotFound();
             }
 
-            string downloadFileName = storedResult.ResultFileName;
-            if (storedResult.Result != null)
-            {
-                downloadFileName = $"{storedResult.Result.BenchmarkName}.{storedResult.Result.Date:yyyy-MM-dd_HH-mm-ss}.{storedResult.Result.Name}.xml.bz2";
-            }
-
-
-            return DownloadFiles(storedResult.ResultFileName, decompress, downloadFileName, "application/octet-stream");
+            return DownloadFiles(storedResult.ResultSubdirectoryName, storedResult.ResultFileName, decompress, storedResult.ResultFileName, "application/octet-stream");
         }
 
-        // GET: ResultEntries/Download/id
+        // GET: ResultEntries/DownloadLogFiles/id
         public async Task<IActionResult> DownloadLogFiles(int? id)
         {
             if (id == null)
@@ -388,45 +387,34 @@ namespace BenchStoreMVC.Controllers
                 return NotFound();
             }
 
-            ResultEntry? storedResult = await _resultEntriesService
-                .GetResultEntryByID(id.Value);
+            ResultEntry? storedResult = await _resultEntriesService.GetResultEntryByID(id.Value);
 
             if (storedResult == null || storedResult.LogFilesName == null)
             {
                 return NotFound();
             }
 
-            string downloadFileName = storedResult.LogFilesName;
-            if (storedResult.Result != null)
-            {
-                downloadFileName = $"{storedResult.Result.BenchmarkName}.{storedResult.Result.Date:yyyy-MM-dd_HH-mm-ss}.logfiles.zip";
-            }
-
-            return DownloadFiles(storedResult.LogFilesName, false, downloadFileName, "application/zip");
+            return DownloadFiles(storedResult.ResultSubdirectoryName, storedResult.LogFilesName, false, storedResult.LogFilesName, "application/zip");
         }
 
-        private IActionResult DownloadFiles(string fileName, bool isCompressedXML, string downloadFileName, string contentType)
+        private IActionResult DownloadFiles(string subdirectoryName, string fileName, bool decompress, string downloadFileTitle, string contentType)
         {
-            string resultStoragePath = _storageOptions.ResultStoragePath;
-
-            string resultFilePath = Path.Combine(resultStoragePath, fileName);
-            if (!System.IO.File.Exists(resultFilePath))
+            try
             {
-                return NotFound();
+                Stream resultStream = _fileStorage.OpenFileReader(subdirectoryName, fileName, decompress);
+
+                if (decompress)
+                {
+                    downloadFileTitle = Path.ChangeExtension(downloadFileTitle, null);
+                    contentType = "text/xml";
+                }
+
+                return File(resultStream, contentType, downloadFileTitle);
             }
-
-            FileStream resultStream = System.IO.File.OpenRead(resultFilePath);
-
-            if (isCompressedXML)
+            catch (ArgumentException ex)
             {
-                BZip2InputStream bzipInputStream = new BZip2InputStream(resultStream);
-                bzipInputStream.IsStreamOwner = true;
-
-                downloadFileName = Path.ChangeExtension(downloadFileName, null);
-                return File(bzipInputStream, "text/xml", downloadFileName);
+                return NotFound(ex.Message);
             }
-
-            return File(resultStream, contentType, downloadFileName);
         }
 
         // GET: ResultEntries/GenerateTable/id
@@ -437,8 +425,7 @@ namespace BenchStoreMVC.Controllers
                 return NotFound();
             }
 
-            ResultEntry? resultEntry = await _resultEntriesService
-                .GetResultEntryByID(id.Value);
+            ResultEntry? resultEntry = await _resultEntriesService.GetResultEntryByID(id.Value);
             if (resultEntry == null)
             {
                 return NotFound();
@@ -462,54 +449,58 @@ namespace BenchStoreMVC.Controllers
         private async Task<IActionResult> GenerateTableFromIDs(IEnumerable<int> resultEntryIDs)
         {
             List<string> resultFilePaths = new List<string>();
-            List<string> logFilePaths = new List<string>();
-
-            string resultStoragePath = _storageOptions.ResultStoragePath;
 
             foreach (int id in resultEntryIDs)
             {
-                ResultEntry? storedResult = await _resultEntriesService
-                    .GetResultEntryByID(id);
+                ResultEntry? storedResult = await _resultEntriesService.GetResultEntryByID(id);
 
-                if (storedResult == null || storedResult.ResultFileName == null)
+                if (storedResult == null || !_fileStorage.FileExists(storedResult.ResultSubdirectoryName, storedResult.ResultFileName))
                 {
                     return NotFound();
                 }
 
-                string resultFilePath = Path.Combine(resultStoragePath, storedResult.ResultFileName);
+                resultFilePaths.Add($"{storedResult.ResultSubdirectoryName}/{storedResult.ResultFileName}");
 
-                if (!System.IO.File.Exists(resultFilePath))
+                if (storedResult.LogFilesName != null && !_fileStorage.FileExists(storedResult.ResultSubdirectoryName, storedResult.LogFilesName))
                 {
                     return NotFound();
                 }
+            }
 
-                resultFilePaths.Add(resultFilePath);
+            string hostUrl = $"{(HttpContext.Request.IsHttps ? "https" : "http")}://{HttpContext.Request.Host.Value}/Results";
+            string content = await _tableGeneratorExecutor.ExecuteTableGenerator(hostUrl, resultFilePaths);
 
-                if (storedResult.LogFilesName != null)
+            return base.Content(content, "text/html");
+        }
+
+        private async Task<List<Label>> GetLabelsFromLabelsInput(string? labelsInput)
+        {
+            List<Label> labels = new List<Label>();
+
+            if (labelsInput == null)
+            {
+                return labels;
+            }
+
+            string[] stringLabels = labelsInput.Split(",");
+
+            foreach (string stringLabel in stringLabels)
+            {
+                Label? label = await _labelsService.GetLabelByName(stringLabel);
+
+                if (label == null)
                 {
-                    string logFilePath = Path.Combine(resultStoragePath, storedResult.LogFilesName);
-
-                    if (!System.IO.File.Exists(logFilePath))
+                    label = new Label
                     {
-                        return NotFound();
-                    }
-
-                    logFilePaths.Add(logFilePath);
+                        Name = stringLabel,
+                    };
+                    label.ID = await _labelsService.CreateLabel(label);
                 }
+
+                labels.Add(label);
             }
 
-            string htmlPath = await _tableGeneratorExecutor
-                .ExecuteTableGenerator(resultFilePaths, logFilePaths);
-
-            FileStreamOptions fileStreamOptions = new FileStreamOptions
-            {
-                Options = FileOptions.DeleteOnClose
-            };
-
-            using (StreamReader reader = new StreamReader(htmlPath, fileStreamOptions))
-            {
-                return base.Content(await reader.ReadToEndAsync(), "text/html");
-            }
+            return labels;
         }
     }
 }

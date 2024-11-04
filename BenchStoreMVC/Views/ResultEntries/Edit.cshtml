@@ -9,6 +9,7 @@
 <form asp-action="@nameof(ResultEntriesController.Edit)" method="post" class="mt-4">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <input type="hidden" asp-for="ResultEntry.ID" />
+    <input type="hidden" asp-for="ResultEntry.ResultSubdirectoryName" />
     <input type="hidden" asp-for="ResultEntry.ResultFileName" />
     <input type="hidden" asp-for="ResultEntry.LogFilesName" />
 

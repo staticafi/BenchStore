@@ -8,8 +8,9 @@
 
 <form asp-action="@nameof(ResultEntriesController.Create)" method="post" enctype="multipart/form-data" class="mt-4">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <input asp-for="ResultFileTempPath" type="hidden" class="form-control" />
-    <input asp-for="ResultLogsTempPath" type="hidden" class="form-control" />
+    <input asp-for="ResultFileTempPath" type="hidden" />
+    <input asp-for="ResultLogsTempPath" type="hidden" />
+    <input asp-for="FileNamePrefix" type="hidden" />
 
     <div class="row">
         <div class="col-6">

@@ -5,11 +5,16 @@ namespace BenchStoreBL.Services.ResultEntries
     public interface IResultEntriesService
     {
         Task<List<ResultEntry>> GetResultEntries(OrderResultEntryBy orderResultEntryBy, ResultEntriesFilter? filter = null);
+
         Task<ResultEntry?> GetResultEntryByID(int id);
+
         Task<int> CreateResultEntry(ResultEntry resultEntry, Result result);
+
         Task DeleteResultEntry(int id);
+
         Task EditResultEntry(ResultEntry resultEntry);
-        Task EditResultEntryLabels(int storedResultId, IEnumerable<Label> labels);
+
+        Task EditResultEntryLabels(int resultEntryID, IEnumerable<Label> labels);
     }
 }
 

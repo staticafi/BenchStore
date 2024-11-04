@@ -2,7 +2,6 @@ using BenchStoreBL;
 using BenchStoreBL.Options;
 
 using BenchStoreDAL;
-using BenchStoreDAL.Data;
 
 using Microsoft.Extensions.FileProviders;
 
@@ -22,19 +21,8 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var services = scope.ServiceProvider;
-
-        var context = services.GetRequiredService<BenchStoreContext>();
-        await context.Database.EnsureCreatedAsync();
-    }
-
-}
 // Configure the HTTP request pipeline.
-else
+if (app.Environment.IsProduction())
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -64,6 +52,7 @@ string requestPath = "/Results";
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fileProvider,
+    ServeUnknownFileTypes = true,
     RequestPath = requestPath
 });
 
